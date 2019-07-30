@@ -113,11 +113,13 @@ print( "INFO: Load the results into a pandas dataframe")
 results = response.json()['results']
 df = pd.DataFrame(results).astype({"sum_of_core_years": 'float64',
                                    "month": 'datetime64'}).sort_values(by=['month'])
-
+print( "======================================================================" )
+print( "Results:" )
 print( df.head() )
+print( "=======================================================================" )
 #exit()
 #==============================================================================
-print( "INFO: Plot bar charts using Plotly")
+print( "INFO: Plot as bar chart (using Plotly)")
 
 cedar_df = df[df.resource == "cedar-compute"]
 graham_df = df[df.resource == "graham-compute"]
@@ -149,14 +151,14 @@ data = [
 # iplot is for Jupyter notebooks, plot goes back to the plotly cloud
 # -Or direct to the browser
 
-figure=go.Figure(data=data,layout=layout)
+figure = go.Figure(data=data,layout=layout)
 #py.iplot(figure, filename='basic-bar')
 py.plot(figure, filename='basic-bar.html')
 
 #print( "INFO: exit here for debug purposes")
 #exit()
 #===============================================================================
-print( "INFO: Charting as a line graph" )
+print( "INFO: Plot as a line graph" )
 data = [
     go.Scatter(cedar),
     go.Scatter(graham),
@@ -165,5 +167,5 @@ data = [
 
 figure=go.Figure(data=data,layout=layout)
 
-py.iplot(figure, filename='line_graph.html', validate=False)
+#py.iplot(figure, filename='line_graph.html', validate=False)
 py.plot(figure, filename='line_graph.html', validate=False)
