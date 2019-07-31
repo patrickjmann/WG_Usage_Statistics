@@ -1,5 +1,9 @@
-# First draft taken directly from Chris Want's Jupyter.
-# * Just a flat Python code. No capability for changing dates, etc.
+# Uses Chris Want's CC Usage API to grab some data from CCDB.
+# See https://wiki.computecanada.ca/staff/Usage_API
+# There's not actually much available. Currently
+# * CPU usage
+# * GPU usage
+#
 
 from __future__ import print_function
 import sys
@@ -39,9 +43,16 @@ class Options:
 
         end_date_default_str = self.end_date_default.strftime("%Y-%m-%d")
         arg_parser.add_argument( "end_date", help="end date (default="+end_date_default_str+")", nargs='?', default=end_date_default_str )
+
+        arg_parser.add_argument( "--bar", help="Create a bar chart of results", action="store_true" )
+        arg_parser.add_argument( "--line", help="Create a line chart of results", action="store_true" )
+
+
         args = arg_parser.parse_args( )
         self.start_date = parser.parse( args.start_date )
         self.end_date = parser.parse( args.end_date )
+        self.bar = args.bar
+        self.line = args.line
 
     def __init__(self):
         self.get_from_args()
@@ -49,6 +60,78 @@ class Options:
         self.test_dates()
         #print( "Class name        = \"", self.CLASSNAME, "\"", sep='' )
         #print( "Class description = \"", self.__doc__, "\"", sep='' )
+#===============================================================================
+#==============================================================================
+def plot_bar( df ):
+    print( "INFO: Plot as bar chart (using Plotly)")
+
+    cedar_df = df[df.resource == "cedar-compute"]
+    graham_df = df[df.resource == "graham-compute"]
+    niagara_df = df[df.resource == "niagara-compute"]
+
+    cedar = dict(x=cedar_df.month,
+             y=cedar_df.sum_of_core_years,
+             name='Cedar')
+    graham = dict(x=graham_df.month,
+              y=graham_df.sum_of_core_years,
+              name='Graham')
+    niagara = dict(x=niagara_df.month,
+               y=niagara_df.sum_of_core_years,
+               name='Niagara')
+
+    layout = go.Layout(
+        title='Usage by month',
+        yaxis=dict(
+            title='Core years',
+        )
+    )
+
+    data = [
+        go.Bar(cedar),
+        go.Bar(graham),
+        go.Bar(niagara)
+    ]
+
+    # iplot is for Jupyter notebooks, plot goes back to the plotly cloud
+    # -Or direct to the browser
+
+    figure = go.Figure(data=data,layout=layout)
+    #py.iplot(figure, filename='basic-bar')
+    py.plot(figure, filename='basic-bar.html')
+
+#===============================================================================
+def plot_line( go ):
+    print( "INFO: Plot as a line graph" )
+    cedar_df = df[df.resource == "cedar-compute"]
+    graham_df = df[df.resource == "graham-compute"]
+    niagara_df = df[df.resource == "niagara-compute"]
+
+    cedar = dict(x=cedar_df.month,
+             y=cedar_df.sum_of_core_years,
+             name='Cedar')
+    graham = dict(x=graham_df.month,
+              y=graham_df.sum_of_core_years,
+              name='Graham')
+    niagara = dict(x=niagara_df.month,
+               y=niagara_df.sum_of_core_years,
+               name='Niagara')
+
+    layout = go.Layout(
+        title='Usage by month',
+        yaxis=dict(
+            title='Core years',
+        )
+    )
+    data = [
+        go.Scatter(cedar),
+        go.Scatter(graham),
+        go.Scatter(niagara)
+    ]
+
+    figure=go.Figure(data=data,layout=layout)
+
+    #py.iplot(figure, filename='line_graph.html', validate=False)
+    py.plot(figure, filename='line_graph.html', validate=False)
 
 #===============================================================================
 options = Options()
@@ -62,6 +145,8 @@ print( SCRIPTNAME, "Start date:", usage_api_start_date, " (formatted for usage a
 print( SCRIPTNAME, "End date:  ", usage_api_end_date, " (formatted for usage api (Year-month-day))" )
 
 #===============================================================================
+# Setup
+
 api_key = os.environ.get('USAGE_API_KEY')
 if not api_key:
     print( "ERROR: the api key is empty. Check that USAGE_API_KEY has been set.")
@@ -77,6 +162,9 @@ headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Token token="%s"' % (api_key)
 }
+#===============================================================================
+# Create the query
+
 query = {
     "query": {
         "select": [
@@ -102,13 +190,13 @@ print( "INFO: making the request to \"",api_host, "\"" )
 response = requests.request('GET', endpoint, json=query, headers=headers)
 
 if response.status_code == 200:
-    print( "  successful - received response")
+    print( "      successful - received response")
     #pprint(response.json(), depth=5)
 else:
     print("Error: %d" % (response.status_code))
     print(response.text)
     exit()
-
+#===============================================================================
 print( "INFO: Load the results into a pandas dataframe")
 results = response.json()['results']
 df = pd.DataFrame(results).astype({"sum_of_core_years": 'float64',
@@ -118,54 +206,9 @@ print( "Results:" )
 print( df.head() )
 print( "=======================================================================" )
 #exit()
-#==============================================================================
-print( "INFO: Plot as bar chart (using Plotly)")
 
-cedar_df = df[df.resource == "cedar-compute"]
-graham_df = df[df.resource == "graham-compute"]
-niagara_df = df[df.resource == "niagara-compute"]
+if options.bar:
+    plot_bar(df)
 
-cedar = dict(x=cedar_df.month,
-             y=cedar_df.sum_of_core_years,
-             name='Cedar')
-graham = dict(x=graham_df.month,
-              y=graham_df.sum_of_core_years,
-              name='Graham')
-niagara = dict(x=niagara_df.month,
-               y=niagara_df.sum_of_core_years,
-               name='Niagara')
-
-layout = go.Layout(
-    title='Usage by month',
-    yaxis=dict(
-        title='Core years',
-    )
-)
-
-data = [
-    go.Bar(cedar),
-    go.Bar(graham),
-    go.Bar(niagara)
-]
-
-# iplot is for Jupyter notebooks, plot goes back to the plotly cloud
-# -Or direct to the browser
-
-figure = go.Figure(data=data,layout=layout)
-#py.iplot(figure, filename='basic-bar')
-py.plot(figure, filename='basic-bar.html')
-
-#print( "INFO: exit here for debug purposes")
-#exit()
-#===============================================================================
-print( "INFO: Plot as a line graph" )
-data = [
-    go.Scatter(cedar),
-    go.Scatter(graham),
-    go.Scatter(niagara)
-]
-
-figure=go.Figure(data=data,layout=layout)
-
-#py.iplot(figure, filename='line_graph.html', validate=False)
-py.plot(figure, filename='line_graph.html', validate=False)
+if options.line:
+    plot_line(df)
