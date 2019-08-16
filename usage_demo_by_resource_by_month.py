@@ -1,6 +1,7 @@
-# First draft taken directly from Chris Want's Jupyter.
-# * Just a flat Python code. No capability for changing dates, etc.
-
+# Get CC stats from the CCDB utilization api (Chris Want).
+# This version included command-line parameters, but otherwise was monolithic.
+# See "usage_by_resource_by_month.py" for a later, more organized version
+#
 from __future__ import print_function
 import sys
 import argparse
@@ -23,7 +24,7 @@ SCRIPTNAME=sys.argv[0]
 ##DEFAULT_CCDB_HOST = 'https://ccdb.computecanada.ca'
 #===============================================================================
 class Options:
-    """Get the options from the command-line"""
+    """OLD: Utilization stats for CC systems"""
     start_date_default = datetime.datetime(2019,1,1)
     end_date_default = datetime.datetime.now()
 
@@ -33,7 +34,10 @@ class Options:
             exit(1)
 
     def get_from_args(self):
-        arg_parser = argparse.ArgumentParser( description="Test the python command-line argument parser. Uses datetime and argparser" )
+        arg_parser = argparse.ArgumentParser(
+description =
+"OLD: Utilization stats from CCDB api. \
+Test the python command-line argument parser. Uses datetime and argparser." )
         start_date_default_str = self.start_date_default.strftime("%Y-%m-%d")
         arg_parser.add_argument( 'start_date', help="start date (default="+start_date_default_str+")", nargs='?', default=start_date_default_str )
 

@@ -27,7 +27,7 @@ SCRIPTNAME=sys.argv[0]
 ##DEFAULT_CCDB_HOST = 'https://ccdb.computecanada.ca'
 #===============================================================================
 class Options:
-    """Get the options from the command-line"""
+    """System Usage data"""
     start_date_default = datetime.datetime(2019,1,1)
     end_date_default = datetime.datetime.now()
 
@@ -37,7 +37,11 @@ class Options:
             exit(1)
 
     def get_from_args(self):
-        arg_parser = argparse.ArgumentParser( description="Test the python command-line argument parser. Uses datetime and argparser" )
+        arg_parser = argparse.ArgumentParser(
+            description =
+"Get system usage data from Chris' utilization API and generate graphs.\
+ Includes command-line arguments as a test (using datetime and argparser)"
+        )
         start_date_default_str = self.start_date_default.strftime("%Y-%m-%d")
         arg_parser.add_argument( 'start_date', help="start date (default="+start_date_default_str+")", nargs='?', default=start_date_default_str )
 
